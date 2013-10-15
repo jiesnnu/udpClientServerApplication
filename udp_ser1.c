@@ -4,13 +4,15 @@ udp_ser.c: the source file of the server in udp transmission
 #include "headsock.h"
 
 // transmitting and receiving function
-void transmit_and_receive_packets(int sockfd);                                                           
+void transmit_and_receive_packets(int sockfd,int datagram_count);                                                           
+
+const char* output_file_name = "outputFile.txt";
 
 int main(int argc, char *argv[])
 {
 	int sockfd;
 	struct sockaddr_in my_address;
-	
+	int datagram_count = 0;		
 	//create socket
 	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {			
 		printf("error in socket");
@@ -30,18 +32,19 @@ int main(int argc, char *argv[])
 	}
 	printf("start receiving\n");
 	while(1) {
-		transmit_and_receive_packets(sockfd);                        
+		transmit_and_receive_packets(sockfd,datagram_count);                        
 	}
 	close(sockfd);
 	exit(EXIT_SUCCESS);
 }
 
-void transmit_and_receive_packets(int sockfd)
+void transmit_and_receive_packets(int sockfd,int datagram_count)
 {
-	char received_message[MAXSIZE];
-	int n = 0, client_address_length = 0;
+	char buf[BUFSIZE];
+	long lseek = 0;
+	char received_message[BUFSIZE];
+	int n = 0, client_address_length = 0, end = 0;
 	struct sockaddr_in client_address;
-	int datagramCount = 0;	
 	client_address_length = sizeof (struct sockaddr_in);
 	//Initializing acknowledgement
 	struct ack_so acknowledgement;
@@ -49,12 +52,23 @@ void transmit_and_receive_packets(int sockfd)
 	acknowledgement.len = 0;
 	
 	
+	while(!end){
 	//receive the packet
 	if ((n=recvfrom(sockfd, &received_message, DATALEN, 0, (struct sockaddr *)&client_address, &client_address_length)) > 0) {      
-		datagramCount++;
-		printf("Received Datagram %d \n",datagramCount);
-		printf("the received Datagram is :%s\n", received_message);	
-
+		datagram_count++;
+		printf("Received Datagram %d \n",datagram_count);
+		if(received_message[n-1] =='\0')
+		{
+			end = 1;
+			n--;
+		}
+		lseek += n;
+		FILE *file_pointer = fopen(output_file_name, "aw");
+		fprintf(file_pointer,"%s",received_message);
+		//FILE *file_pointer = fopen(output, "wt");
+		//if (file_pointer != NULL)
+		//fwrite (buf , 1 , lseek , file_pointer);
+		//fclose(file_pointer);
 		//Send acknowledgement on receiving the datagram (Stop & Wait Protocol)
 		if ((sendto(sockfd,&acknowledgement,2,0,(struct sockaddr *) &client_address, client_address_length)) < 0)
 		{	
@@ -68,7 +82,9 @@ void transmit_and_receive_packets(int sockfd)
 		printf("Error receiving Datagram,n=%d\n",n);
 		exit(EXIT_FAILURE);
 	}
-	
-	received_message[n] = '\0';
-	printf("the received string is :%s\n", received_message);
+	}
+	printf("the received string is : %s\n", received_message);
+	printf("Total number of bytes received is : %d\n",(int)lseek);
+	close(sockfd);
+	exit(EXIT_SUCCESS);	
 }
