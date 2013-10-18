@@ -65,11 +65,6 @@ void transmit_and_receive_packets(int sockfd,int datagram_count)
 		lseek += n;
 		FILE *file_pointer = fopen(output_file_name, "aw");
 		fprintf(file_pointer,"%s",received_message);
-		//FILE *file_pointer = fopen(output, "wt");
-		//if (file_pointer != NULL)
-		//fwrite (buf , 1 , lseek , file_pointer);
-		//fclose(file_pointer);
-		//Send acknowledgement on receiving the datagram (Stop & Wait Protocol)
 		if ((sendto(sockfd,&acknowledgement,2,0,(struct sockaddr *) &client_address, client_address_length)) < 0)
 		{	
 			printf("Error in sending acknowledgement, n = %d\n",n);								
