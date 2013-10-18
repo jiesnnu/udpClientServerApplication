@@ -4,8 +4,8 @@ udp_client.c: the source file of the client in udp
 
 #include "headsock.h"
 
-float transmitPackets(FILE *fp, int sockfd, struct sockaddr *addr, int addrlen, long *len);                
-void getTimeInterval(struct  timeval *out, struct timeval *in);
+float transmit_packets(FILE *fp, int sockfd, struct sockaddr *addr, int addrlen, long *len);                
+void get_time_interval(struct  timeval *out, struct timeval *in);
 
 int main(int argc, char *argv[])
 {
@@ -15,9 +15,9 @@ int main(int argc, char *argv[])
 	char **pptr;
 	struct hostent *sh;
 	struct in_addr **addrs;
-	float rateOfTransmission;
-	float timeInterval;
-	FILE* filePointer;
+	float rate_of_transmission;
+	float time_interval;
+	FILE* file_pointer;
 
 	if (argc!= 2)
 	{
@@ -55,58 +55,58 @@ int main(int argc, char *argv[])
 	ser_addr.sin_port = htons(MYUDP_PORT);
 	memcpy(&(ser_addr.sin_addr.s_addr), *addrs, sizeof(struct in_addr));
 	bzero(&(ser_addr.sin_zero), 8);
-	if((filePointer = fopen ("myfile.txt","r+t")) == NULL)
+	if((file_pointer = fopen ("myfile.txt","r+t")) == NULL)
 	{
 		printf("File doesn't exist\n");
 		exit(EXIT_FAILURE);
 	}
-	timeInterval = transmitPackets(filePointer, sockfd, (struct sockaddr *)&ser_addr, sizeof(struct sockaddr_in), &len);   
-	rateOfTransmission = (len/(float)timeInterval);
-	printf("Time(ms) : %.3f, Data sent(byte): %d\nData rate: %f (Kbytes/s)\n", timeInterval, (int)len, rateOfTransmission);
+	time_interval = transmit_packets(file_pointer, sockfd, (struct sockaddr *)&ser_addr, sizeof(struct sockaddr_in), &len);   
+	rate_of_transmission = (len/(float)time_interval);
+	printf("Time(ms) : %.3f, Data sent(byte): %d\nData rate: %f (Kbytes/s)\n", time_interval, (int)len, rate_of_transmission);
 	close(sockfd);
 	exit(EXIT_SUCCESS);
 }
 
-float transmitPackets(FILE *fp, int sockfd, struct sockaddr *serverAddress, int addrlen, long *len)
+float transmit_packets(FILE *fp, int sockfd, struct sockaddr *server_address, int addrlen, long *len)
 {
 	char *buf;
-	long fileSize, totalSizeSent;
+	long file_size, total_size_sent;
 	char sends[DATALEN];
-	int socketLength = sizeof(struct sockaddr_in);
+	int socket_length = sizeof(struct sockaddr_in);
 	struct ack_so acknowledgement;
-	//Packet length + Header Length = totalPacketLength
-	int n, totalPacketLength;
-	float timeInterval = 0.0;
-	struct timeval timeOfSending, timeOfReceiving;
-	totalSizeSent = 0;
+	//Packet length + Header Length = total_packet_length
+	int n, total_packet_length;
+	float time_interval = 0.0;
+	struct timeval time_of_sending, time_of_receiving;
+	total_size_sent = 0;
 
 	
 	fseek (fp , 0 , SEEK_END);
-	fileSize = ftell (fp);
+	file_size = ftell (fp);
 	rewind (fp);
-	printf("The file length is %d bytes\n", (int)fileSize);
+	printf("The file length is %d bytes\n", (int)file_size);
 	printf("the packet length is %d bytes\n",DATALEN);
 
 	// allocate memory to contain the whole file.
-	buf = (char *) malloc (fileSize);
+	buf = (char *) malloc (file_size);
 	if (buf == NULL) exit (EXIT_FAILURE);
 
   	// copy the file into the buffer.
-	fread (buf,1,fileSize,fp);
+	fread (buf,1,file_size,fp);
 
   	/*** the whole file is loaded in the buffer. ***/
-	buf[fileSize] ='\0';									
-	gettimeofday(&timeOfSending, NULL);							
-	while(totalSizeSent<= fileSize)
+	buf[file_size] ='\0';									
+	gettimeofday(&time_of_sending, NULL);							
+	while(total_size_sent<= file_size)
 	{
-		if ((fileSize+1-totalSizeSent) <= DATALEN)
-			totalPacketLength = fileSize+1-totalSizeSent;
+		if ((file_size+1-total_size_sent) <= DATALEN)
+			total_packet_length = file_size+1-total_size_sent;
 		else 
-			totalPacketLength = DATALEN;
-		memcpy(sends, (buf+totalSizeSent), totalPacketLength);
+			total_packet_length = DATALEN;
+		memcpy(sends, (buf+total_size_sent), total_packet_length);
 	
 		//Sending packet
-		n = sendto(sockfd, &sends, totalPacketLength, 0,serverAddress,socketLength);
+		n = sendto(sockfd, &sends, total_packet_length, 0,server_address,socket_length);
 		if(n == -1) 
 		{
 			printf("Error in sending packets, packetSize= %d",strlen(sends));								
@@ -124,17 +124,17 @@ float transmitPackets(FILE *fp, int sockfd, struct sockaddr *serverAddress, int 
 		else
 		printf("Acknowledgement received\n");	
 		}
-		totalSizeSent += totalPacketLength;
+		total_size_sent += total_packet_length;
 	}
-	gettimeofday(&timeOfReceiving, NULL);
+	gettimeofday(&time_of_receiving, NULL);
 	
-	*len= totalSizeSent;
+	*len= total_size_sent;
 	//Getting time interval between client sending and server receiving
-	getTimeInterval(&timeOfReceiving, &timeOfSending);
-	timeInterval += (timeOfReceiving.tv_sec)*1000.0 + (timeOfReceiving.tv_usec)/1000.0;
-	return(timeInterval);
+	get_time_interval(&time_of_receiving, &time_of_sending);
+	time_interval += (time_of_receiving.tv_sec)*1000.0 + (time_of_receiving.tv_usec)/1000.0;
+	return(time_interval);
 }
-void getTimeInterval(struct  timeval *out, struct timeval *in)
+void get_time_interval(struct  timeval *out, struct timeval *in)
 {
 	if ((out->tv_usec -= in->tv_usec) < 0)
 	{
