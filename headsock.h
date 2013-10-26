@@ -20,6 +20,7 @@
 #define BUFSIZE 60000
 #define PACKLEN 508
 #define HEADLEN 8
+#define FRAME_ERROR_PROBABILITY 0.20
 
 struct pack_so					//data packet structure
 {
