@@ -77,6 +77,7 @@ float transmit_packets(FILE *fp, int sockfd, struct sockaddr *server_address, in
 	//Packet length + Header Length = total_packet_length
 	int n, total_packet_length;
 	float time_interval = 0.0;
+	double random_error_probability = 0.0;
 	struct timeval time_of_sending, time_of_receiving;
 	total_size_sent = 0;
 
@@ -104,9 +105,16 @@ float transmit_packets(FILE *fp, int sockfd, struct sockaddr *server_address, in
 		else 
 			total_packet_length = DATALEN;
 		memcpy(sends, (buf+total_size_sent), total_packet_length);
-	
-		//Sending packet
+		
+		//Generating a random error probability value
+		srand(time(NULL));
+		random_error_probability = (double)rand() / (double)RAND_MAX ;
+		if(random_error_probability > FRAME_ERROR_PROBABILITY)
+		//Sending packet without any error
 		n = sendto(sockfd, &sends, total_packet_length, 0,server_address,socket_length);
+		/*else
+		Send error frame
+		*/
 		if(n == -1) 
 		{
 			printf("Error in sending packets, packetSize= %d",strlen(sends));								
