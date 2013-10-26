@@ -62,9 +62,8 @@ void transmit_and_receive_packets(int sockfd,int datagram_count)
 			end = 1;
 			n--;
 		}
+		memcpy((buf+lseek), received_message, n);
 		lseek += n;
-		FILE *file_pointer = fopen(output_file_name, "aw");
-		fprintf(file_pointer,"%s",received_message);
 		if ((sendto(sockfd,&acknowledgement,2,0,(struct sockaddr *) &client_address, client_address_length)) < 0)
 		{	
 			printf("Error in sending acknowledgement, n = %d\n",n);								
@@ -78,7 +77,9 @@ void transmit_and_receive_packets(int sockfd,int datagram_count)
 		exit(EXIT_FAILURE);
 	}
 	}
-	printf("the received string is : %s\n", received_message);
+	FILE *file_pointer = fopen(output_file_name, "a+w");
+	fwrite (buf , 1 , lseek , file_pointer);
+	printf("the received string is : %s\n", buf);
 	printf("Total number of bytes received is : %d\n",(int)lseek);
 	close(sockfd);
 	exit(EXIT_SUCCESS);	
