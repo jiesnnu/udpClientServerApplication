@@ -40,29 +40,32 @@ void transmit_and_receive_packets(int sockfd,int datagram_count)
 {
 	char buf[BUFSIZE];
 	long lseek = 0;
-	char received_message[BUFSIZE];
-	int n = 0, client_address_length = 0, end = 0;
+	char received_message[DATALEN];
+	int  n = 0, client_address_length = 0, end = 0;
 	struct sockaddr_in client_address;
 	client_address_length = sizeof (struct sockaddr_in);
 	//Initializing acknowledgement
 	struct ack_so acknowledgement;
 	acknowledgement.num = 1;
 	acknowledgement.len = 0;
-	
+	struct ack_so NACK;
+	NACK.num = -1;
+	NACK.len = 0;
 	
 	while(!end){
 	//receive the packet
 	if ((n=recvfrom(sockfd, &received_message, DATALEN, 0, (struct sockaddr *)&client_address, &client_address_length)) > 0) {      
 		datagram_count++;
 		printf("Received Datagram %d \n",datagram_count);
-		if(received_message[n-1] =='\0')
+		if(received_message[n-1] == '\0')
 		{
 			end = 1;
 			n--;
 		}
 		memcpy((buf+lseek), received_message, n);
 		lseek += n;
-		if ((sendto(sockfd,&acknowledgement,2,0,(struct sockaddr *) &client_address, client_address_length)) < 0)
+	
+		if ((sendto(sockfd, &acknowledgement, sizeof(acknowledgement), 0, (struct sockaddr *) &client_address, client_address_length)) <= 0 )
 		{	
 			printf("Error in sending acknowledgement, n = %d\n",n);								
 			exit(EXIT_FAILURE);
@@ -71,13 +74,20 @@ void transmit_and_receive_packets(int sockfd,int datagram_count)
 			printf("Acknowledgement sent\n");
 	}
 	else{
-		printf("Error receiving Datagram,n=%d\n",n);
-		exit(EXIT_FAILURE);
+		if(n==0){
+			datagram_count++;
+			sendto(sockfd, &NACK, sizeof(NACK), 0, (struct sockaddr *) &client_address, client_address_length);
+			printf("Sending NACK\n");
+		}
+		else{	
+			printf("Error receiving Datagram,n=%d\n",n);
+			exit(EXIT_FAILURE);
+		}
 	}
 	}
 	FILE *file_pointer = fopen(output_file_name, "a+w");
 	fwrite (buf , 1 , lseek , file_pointer);
-	printf("the received string is : %s\n", buf);
+	//printf("the received string is : %s\n", buf);
 	printf("Total number of bytes received is : %d\n",(int)lseek);
 	close(sockfd);
 	exit(EXIT_SUCCESS);	
