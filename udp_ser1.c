@@ -31,9 +31,7 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 	printf("start receiving\n");
-	while(1) {
-		transmit_and_receive_packets(sockfd,datagram_count);                        
-	}
+	transmit_and_receive_packets(sockfd,datagram_count);                        
 	close(sockfd);
 	exit(EXIT_SUCCESS);
 }
