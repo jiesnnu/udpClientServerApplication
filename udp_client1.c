@@ -90,36 +90,44 @@ float transmit_packets(FILE *fp, int sockfd, struct sockaddr *server_address, in
 
 	// allocate memory to contain the whole file.
 	buf = (char *) malloc (file_size);
-	if (buf == NULL) exit (EXIT_FAILURE);
+	if (buf == NULL) 
+		exit (EXIT_FAILURE);
 
   	// copy the file into the buffer.
 	fread (buf,1,file_size,fp);
 
   	/*** the whole file is loaded in the buffer. ***/
 	buf[file_size] ='\0';									
-	gettimeofday(&time_of_sending, NULL);							
+	gettimeofday(&time_of_sending, NULL);
+	int retransmit_flag = 0;
+	srand(time(NULL));
 	while(total_size_sent<= file_size)
 	{
+		if(retransmit_flag == 1){
+			retransmit_flag = 0;
+			printf("Retransmitting frame");
+		}
+
 		if ((file_size+1-total_size_sent) <= DATALEN)
 			total_packet_length = file_size+1-total_size_sent;
 		else 
 			total_packet_length = DATALEN;
 		memcpy(sends, (buf+total_size_sent), total_packet_length);
-		
 		//Generating a random error probability value
-		srand(time(NULL));
 		random_error_probability = (double)rand() / (double)RAND_MAX ;
+
 		if(random_error_probability > FRAME_ERROR_PROBABILITY)
-		//Sending packet without any error
-		n = sendto(sockfd, &sends, total_packet_length, 0,server_address,socket_length);
-		/*else
-		Send error frame
-		*/
-		if(n == -1) 
 		{
-			printf("Error in sending packets, packetSize= %d",strlen(sends));								
-			exit(EXIT_FAILURE);
+		//Sending packet without any error
+		printf("Error Probability less than FRAME_ERROR_PROBABILITY\n",random_error_probability);
+		n = sendto(sockfd, &sends, total_packet_length, 0, server_address, socket_length);
 		}
+		else{
+			printf("random_error_probability = %f\nSending bad frame\n",random_error_probability);
+			n = sendto(sockfd, &sends, 0, 0, server_address, socket_length);
+		}
+		if(n == -1) 
+			exit(EXIT_FAILURE);
 		//Checking for Acknowledgement
 		if (recv(sockfd, &acknowledgement, 2, 0) == -1)                                   //receive the ack
 		{
@@ -127,8 +135,14 @@ float transmit_packets(FILE *fp, int sockfd, struct sockaddr *server_address, in
 		exit(EXIT_FAILURE);
 		}
 		else{
-		if (acknowledgement.num != 1|| acknowledgement.len != 0)
-		printf("error in transmission\n");
+		if (acknowledgement.num != 1 || acknowledgement.len != 0)
+		{
+			//usleep(TIMEOUT_INTERVAL);
+			printf("Wrong Acknowledgement Received, continuing\n");
+			retransmit_flag = 1;
+			continue;
+			//printf("error in transmission\n");
+		}
 		else
 		printf("Acknowledgement received\n");	
 		}
