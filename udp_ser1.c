@@ -49,7 +49,7 @@ void transmit_and_receive_packets(int sockfd,int datagram_count)
 	acknowledgement.num = ACK_CODE;
 	acknowledgement.len = 0;
 	struct ack_so NACK;
-	NACK.num = NACK_CODE
+	NACK.num = NACK_CODE;
 	NACK.len = 0;
 	
 	while(!end){
