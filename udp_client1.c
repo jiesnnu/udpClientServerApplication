@@ -135,9 +135,8 @@ float transmit_packets(FILE *fp, int sockfd, struct sockaddr *server_address, in
 		exit(EXIT_FAILURE);
 		}
 		else{
-		if (acknowledgement.num != 1 || acknowledgement.len != 0)
+		if (acknowledgement.num != ACK_CODE || acknowledgement.len != 0)
 		{
-			//usleep(TIMEOUT_INTERVAL);
 			printf("Wrong Acknowledgement Received, continuing\n");
 			retransmit_flag = 1;
 			continue;

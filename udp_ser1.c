@@ -46,10 +46,10 @@ void transmit_and_receive_packets(int sockfd,int datagram_count)
 	client_address_length = sizeof (struct sockaddr_in);
 	//Initializing acknowledgement
 	struct ack_so acknowledgement;
-	acknowledgement.num = 1;
+	acknowledgement.num = ACK_CODE;
 	acknowledgement.len = 0;
 	struct ack_so NACK;
-	NACK.num = -1;
+	NACK.num = NACK_CODE
 	NACK.len = 0;
 	
 	while(!end){
@@ -87,7 +87,6 @@ void transmit_and_receive_packets(int sockfd,int datagram_count)
 	}
 	FILE *file_pointer = fopen(output_file_name, "a+w");
 	fwrite (buf , 1 , lseek , file_pointer);
-	//printf("the received string is : %s\n", buf);
 	printf("Total number of bytes received is : %d\n",(int)lseek);
 	close(sockfd);
 	exit(EXIT_SUCCESS);	
