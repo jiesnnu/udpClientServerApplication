@@ -119,7 +119,7 @@ float transmit_packets(FILE *fp, int sockfd, struct sockaddr *server_address, in
 		if(random_error_probability > FRAME_ERROR_PROBABILITY)
 		{
 		//Sending packet without any error
-		printf("Error Probability less than FRAME_ERROR_PROBABILITY\n",random_error_probability);
+		printf("Error Probability less than FRAME_ERROR_PROBABILITY\n");
 		n = sendto(sockfd, &sends, total_packet_length, 0, server_address, socket_length);
 		}
 		else{
