@@ -87,7 +87,7 @@ void transmit_and_receive_packets(int sockfd,int datagram_count)
 	}
 	FILE *file_pointer = fopen(output_file_name, "a+w");
 	fwrite (buf , 1 , lseek , file_pointer);
-	printf("Total number of bytes received is : %d\n",(int)lseek);
+	printf("Total number of bytes received is : %d\n",(int)lseek)+1);
 	close(sockfd);
 	exit(EXIT_SUCCESS);	
 }
