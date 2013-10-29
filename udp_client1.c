@@ -105,7 +105,7 @@ float transmit_packets(FILE *fp, int sockfd, struct sockaddr *server_address, in
 	{
 		if(retransmit_flag == 1){
 			retransmit_flag = 0;
-			printf("Retransmitting frame");
+			printf("Retransmitting frame\n");
 		}
 
 		if ((file_size+1-total_size_sent) <= DATALEN)
